@@ -3,13 +3,11 @@
 #include <stdio.h>
 
 
-#define THREADCOUNT 12
+#define THREADCOUNT 11
 HANDLE Threads[THREADCOUNT];
-HANDLE semA, semB, semC, semD, semE, semF, semG, semH, semI, semK, semM, sem_Extra;
+HANDLE semA, semB, semC, semD, semE, semF, semG, semH, semI, semK, semM;
 HANDLE mutex;
 DWORD ThreadID;
-
-static int count = 0;
 
 unsigned int lab3_thread_graph_id()
 {
@@ -26,19 +24,10 @@ const char* lab3_sequential_threads()
     return "bcd";
 }
 
-DWORD WINAPI Thread_Extra(LPVOID name)
+void computation()
 {
-    WaitForSingleObject(sem_Extra, INFINITE);
-    while(count != 12)
-    {
-        WaitForSingleObject(mutex, INFINITE);
-        ReleaseMutex(mutex);
-        computation();
-    }
-
-    return TRUE;
+    Sleep(0.01);
 }
-
 
 DWORD WINAPI ThreadA(LPVOID name)
 {
@@ -134,7 +123,6 @@ DWORD WINAPI ThreadD(LPVOID name)
     for (size_t i = 6; i < 9; ++i)
     {
         WaitForSingleObject(mutex, INFINITE);
-        count += 1;
         std::cout << 'd' << std::flush;
         ReleaseMutex(mutex);
         computation();
@@ -149,7 +137,6 @@ DWORD WINAPI ThreadE(LPVOID name)
     for (size_t i = 0; i < 3; ++i)
     {
         WaitForSingleObject(mutex, INFINITE);
-        count += 1;
         std::cout << 'e' << std::flush;
         ReleaseMutex(mutex);
         computation();
@@ -165,7 +152,6 @@ DWORD WINAPI ThreadF(LPVOID name)
     for (size_t i = 0; i < 3; ++i)
     {
         WaitForSingleObject(mutex, INFINITE);
-        count += 1;
         std::cout << 'f' << std::flush;
         ReleaseMutex(mutex);
         computation();
@@ -178,7 +164,7 @@ DWORD WINAPI ThreadF(LPVOID name)
         std::cout << 'f' << std::flush;
         ReleaseMutex(mutex);
         computation();
-        if (!ReleaseSemaphore(semG, 1, NULL)){
+        if (!ReleaseSemaphore(semH, 1, NULL)){
             printf("ReleaseSemaphore error: %d\n", GetLastError());
         }
     }
@@ -196,9 +182,12 @@ DWORD WINAPI ThreadG(LPVOID name)
         ReleaseMutex(mutex);
         computation();
 
-        if (!ReleaseSemaphore(semH, 1, NULL))
+        if (!ReleaseSemaphore(semG, 1, NULL))
             printf("Release Semaphore error: %d\n", GetLastError());
     }
+
+    if (!ReleaseSemaphore(semH, 1, NULL))
+            printf("Release Semaphore error: %d\n", GetLastError());
 
     return TRUE;
 }
@@ -209,7 +198,6 @@ DWORD WINAPI ThreadH(LPVOID name)
     for (size_t i = 0; i < 3; ++i)
     {
         WaitForSingleObject(mutex, INFINITE);
-        count += 1;
         std::cout << 'h' << std::flush;
         ReleaseMutex(mutex);
         computation();
@@ -227,7 +215,7 @@ DWORD WINAPI ThreadH(LPVOID name)
         }
     }
 
-    if (!ReleaseSemaphore(semH, 1, NULL)){
+    if (!ReleaseSemaphore(semG, 1, NULL)){
             printf("ReleaseSemaphore error: %d\n", GetLastError());
     }
 
@@ -311,7 +299,7 @@ DWORD WINAPI ThreadM(LPVOID name)
 }
 
 
-int lab3_init()
+int main()
 {
     mutex = CreateMutex(NULL, FALSE, NULL);
 
@@ -370,11 +358,6 @@ int lab3_init()
         printf("CreateSemaphore N error: %d\n", GetLastError());
         return 1;
     }
-    sem_Extra = CreateSemaphore(NULL, 0, 1, NULL);
-    if (sem_Extra == NULL){
-        printf("CreateSemaphore Extra error: %d\n", GetLastError());
-        return 1;
-    }
 
     Threads[0] = CreateThread(NULL, 0, ThreadA, NULL, 0, &ThreadID);
     Threads[1] = CreateThread(NULL, 0, ThreadB, NULL, 0, &ThreadID);
@@ -387,7 +370,6 @@ int lab3_init()
     Threads[8] = CreateThread(NULL, 0, ThreadI, NULL, 0, &ThreadID);
     Threads[9] = CreateThread(NULL, 0, ThreadK, NULL, 0, &ThreadID);
     Threads[10] = CreateThread(NULL, 0, ThreadM, NULL, 0, &ThreadID);
-    Threads[11] = CreateThread(NULL, 0, Thread_Extra, NULL, 0, &ThreadID);
 
     WaitForSingleObject(Threads[2], INFINITE);
 
@@ -404,11 +386,8 @@ int lab3_init()
         printf("ReleaseSemaphore error: %d\n", GetLastError());
     }
 
-    if (!ReleaseSemaphore(sem_Extra, 1, NULL)){
-        printf("ReleaseSemaphore error: %d\n", GetLastError());
-    }
-
-    WaitForSingleObject(Threads[11], INFINITE);
+    WaitForSingleObject(Threads[3], INFINITE);
+    WaitForSingleObject(Threads[4], INFINITE);
 
     if (!ReleaseSemaphore(semF, 1, NULL)){
         printf("ReleaseSemaphore error: %d\n", GetLastError());
