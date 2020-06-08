@@ -24,10 +24,6 @@ const char* lab3_sequential_threads()
     return "bcd";
 }
 
-void computation()
-{
-    Sleep(0.01);
-}
 
 DWORD WINAPI ThreadA(LPVOID name)
 {
@@ -299,7 +295,7 @@ DWORD WINAPI ThreadM(LPVOID name)
 }
 
 
-int main()
+int lab3_init()
 {
     mutex = CreateMutex(NULL, FALSE, NULL);
 
